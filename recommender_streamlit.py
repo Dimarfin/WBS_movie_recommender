@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+import sklearn as skl
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
-path = '..\ml-latest-small\\'
+path = 'ml-latest-small\\'
 
 ratings=pd.read_csv(path+'ratings.csv')
 movies=pd.read_csv(path+'movies.csv')
@@ -13,7 +14,7 @@ def movie_popul_rating(genre, ratings, movies, n=10):
     # n=10
         
     df = ratings.merge(movies[['movieId','genres']], how='left', on='movieId')
-    if genre!='any':
+    if genre!='all':
         df = df.loc[df['genres'].str.contains(genre),:]
     
     df = df[['movieId', 'rating']]
@@ -31,24 +32,21 @@ def movie_popul_rating(genre, ratings, movies, n=10):
  
     return df3
 
-
-
-
 #get genre list
 all_listed_genres = list(movies['genres'].str.split('|'))
 flat_list = [x for xs in all_listed_genres for x in xs]
 genres = sorted(list(set(flat_list)))
-genres = ['any genre']+genres[1:]+[genres[0]]
+genres = ['all']+genres[1:]+[genres[0]]
  
-st.title("Movie recommender v0.01")
+st.title("Movie recommender v0.02")
  
 st.write("""
 ### Popularity based
 """)
 genre_choise = st.selectbox(
-                     'Which genre would you like?',
-                     (genres)
-                     )
+                      'Which genre would you like?',
+                      (genres)
+                      )
 popul_df = movie_popul_rating(genre_choise, ratings, movies)
 #st.text(genre_choise)
 st.table(popul_df)
