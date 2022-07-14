@@ -1,7 +1,3 @@
 pandas
 streamlit
-<<<<<<< HEAD
 sklearn
-=======
-sklearn
->>>>>>> 78305264ab08e27de37a191cb48a07838aba11ff
