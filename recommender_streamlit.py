@@ -82,8 +82,17 @@ all_listed_genres = list(movies['genres'].str.split('|'))
 flat_list = [x for xs in all_listed_genres for x in xs]
 genres = sorted(list(set(flat_list)))
 genres = ['all']+genres[1:]+[genres[0]]
- 
-st.title("Movie recommender v0.06")
+
+st.set_page_config(layout="wide") 
+
+# with st.container():
+#     video = ('wbsflix_video.mp4')
+#     st.video(video)
+
+st.title("🎬 WBSFLIX movie recommender")
+st.write("""
+By group 5: Dzmitry, Marvin, Weiling, Tamuka 
+""")
  
 st.write("""
 ### Popularity based
@@ -108,8 +117,8 @@ for movie_id in ids:
                             movie_item_coll_filter(movie_id,ratings, movies ,n=10)
                             ], 
                             axis=0)
-top_similar = top_similar.sort_values('PearsonR') 
-st.table(top_similar.head(10))
+top_similar = top_similar.sort_values('PearsonR',ascending=False)
+st.table(top_similar.reset_index(drop=True).head(10))
 
 st.write("""
 ### User based collaborative filtering
@@ -118,3 +127,6 @@ user_id = st.number_input('Insert a user ID number', min_value=1, max_value=610,
 like_user = movie_user_coll_filter(user_id, ratings, movies,n=10)
  
 st.table(like_user.head(10))
+
+# Main page 🎈
+#🎬
