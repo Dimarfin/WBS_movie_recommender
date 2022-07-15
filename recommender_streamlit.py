@@ -85,10 +85,6 @@ genres = ['all']+genres[1:]+[genres[0]]
 
 st.set_page_config(layout="wide") 
 
-# with st.container():
-#     video = ('wbsflix_video.mp4')
-#     st.video(video)
-
 st.title("🎬 WBSFLIX movie recommender")
 st.write("""
 By group 5: Dzmitry, Marvin, Weiling, Tamuka 
@@ -128,5 +124,22 @@ like_user = movie_user_coll_filter(user_id, ratings, movies,n=10)
  
 st.table(like_user.head(10))
 
+#st.markdown('<p class="big-font">Forget about coding !!</p>', unsafe_allow_html=True)
+st.write("""
+### 
+-
+-
+-
+""")
+st.write("""
+### Forget about coding !!!
+""")
+st.image("nocoding.gif")
+
+#st.markdown('<p class="big-font">let us enjoy movies with popcorn !!</p>', unsafe_allow_html=True)
+st.write("""
+### let us enjoy movies with popcorn !!!
+""")
+st.image("eating_pop_corn.gif")
 # Main page 🎈
 #🎬
