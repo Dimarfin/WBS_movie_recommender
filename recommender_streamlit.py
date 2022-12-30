@@ -3,11 +3,14 @@ import pandas as pd
 import sklearn as skl
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics.pairwise import cosine_similarity
+import requests
 
 path = ''
+API_key = 'd06b517b45b8643d8cdb739e04465106'
 
-ratings=pd.read_csv(path+'ratings.csv')
-movies=pd.read_csv(path+'movies.csv')
+ratings = pd.read_csv(path+'ratings.csv')
+movies = pd.read_csv(path+'movies.csv')
+links = pd.read_csv(path+'links.csv')
 
 def movie_popul_rating(genre, ratings, movies, n=10):
     # genre = 'Comedy'
@@ -86,60 +89,91 @@ genres = ['all']+genres[1:]+[genres[0]]
 st.set_page_config(layout="wide") 
 
 st.title("🎬 WBSFLIX movie recommender")
-st.write("""
-By group 5: Dzmitry, Marvin, Weiling, Tamuka 
-""")
+st.markdown("<b style='text-align: right; color: grey;'>Created by Dzmitry Afanasenkau</b>", unsafe_allow_html=True)
  
 st.write("""
 ### Popularity based
 """)
 genre_choise = st.selectbox(
                       'Choose a genre',
-                      (genres)
+                      (genres),
+                      index=3
                       )
 popul_df = movie_popul_rating(genre_choise, ratings, movies)
-#st.text(genre_choise)
-st.table(popul_df)
+popul_df = popul_df.merge(links[['movieId','imdbId']], how='left', on='movieId')
+
+temp=[]
+width = [3]*11
+temp[0:10] = st.columns(width)
+for i, row in popul_df.head(10).iterrows():
+    with temp[i]:
+        real_imdbId = '00000000' + str(row['imdbId'])
+        real_imdbId = 'tt' + real_imdbId[-7:]
+        response = requests.get(f"""https://api.themoviedb.org/3/find/{real_imdbId}?api_key={API_key}&language=en-US&external_source=imdb_id""")
+        try:
+            st.image(('https://image.tmdb.org/t/p/w92' + response.json()['movie_results'][0]['poster_path']), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+        except:
+            st.image(('rsz_movie_default.jpg'), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+
+df = popul_df
+df['votes'] = popul_df['count']
+with st.expander("More info"):
+    st.table(df[['title','rating','votes','score','genres','imdbId']])        
 
 st.write("""
 ### Similar to a particular movie
 """)
-movie_name = st.text_input('Movie title or key word', 'Forrest Gump')
+movie_name = st.text_input('Movie title or a part of it', 'Star Wars')
 ids = find_movie_id(movie_name, movies)
+movies_with_ids = movies.loc[movies['movieId'].isin(ids)]
 
-top_similar = pd.DataFrame()
-for movie_id in ids:
-    top_similar = pd.concat([top_similar, 
-                            movie_item_coll_filter(movie_id,ratings, movies ,n=10)
-                            ], 
-                            axis=0)
-top_similar = top_similar.sort_values('PearsonR',ascending=False)
-st.table(top_similar.reset_index(drop=True).head(10))
+title_1m = st.selectbox(
+    'Refine your search',
+    tuple(movies_with_ids['title'])
+    )
+id_1m = movies_with_ids.loc[movies_with_ids['title'] == title_1m]['movieId']
+
+top_similar_1m = movie_item_coll_filter(int(id_1m), ratings, movies ,n=10)
+top_similar_1m = top_similar_1m.merge(links[['movieId','imdbId']], how='left', on='movieId')
+
+temp=[]
+width = [3]*11
+temp[0:10] = st.columns(width)
+for i, row in top_similar_1m.head(10).iterrows():
+    with temp[i]:
+        real_imdbId = '00000000' + str(row['imdbId'])
+        real_imdbId = 'tt' + real_imdbId[-7:]
+        response = requests.get(f"""https://api.themoviedb.org/3/find/{real_imdbId}?api_key={API_key}&language=en-US&external_source=imdb_id""")
+        try:
+            st.image(('https://image.tmdb.org/t/p/w92' + response.json()['movie_results'][0]['poster_path']), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+        except:
+            st.image(('rsz_movie_default.jpg'), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+
+with st.expander("More info"):
+    st.table(top_similar_1m.reset_index(drop=True).head(10)[['title','PearsonR','genres']])
 
 st.write("""
 ### User based collaborative filtering
 """)
 user_id = st.number_input('Insert a user ID number', min_value=1, max_value=610, value=100, step=1)
 like_user = movie_user_coll_filter(user_id, ratings, movies,n=10)
- 
-st.table(like_user.head(10))
+like_user = like_user.merge(links[['movieId','imdbId']], how='left', on='movieId')
 
-#st.markdown('<p class="big-font">Forget about coding !!</p>', unsafe_allow_html=True)
-st.write("""
-### 
--
--
--
-""")
-st.write("""
-### Forget about coding !!!
-""")
-st.image("nocoding.gif")
+temp=[]
+width = [3]*11
+temp[0:10] = st.columns(width)
+for i, row in like_user.head(10).iterrows():
+    with temp[i]:
+        real_imdbId = '00000000' + str(row['imdbId'])
+        real_imdbId = 'tt' + real_imdbId[-7:]
+        response = requests.get(f"""https://api.themoviedb.org/3/find/{real_imdbId}?api_key={API_key}&language=en-US&external_source=imdb_id""")
+        try:
+            st.image(('https://image.tmdb.org/t/p/w92' + response.json()['movie_results'][0]['poster_path']), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+        except:
+            st.image(('rsz_movie_default.jpg'), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
 
-#st.markdown('<p class="big-font">let us enjoy movies with popcorn !!</p>', unsafe_allow_html=True)
-st.write("""
-### let us enjoy movies with popcorn !!!
-""")
-st.image("eating_pop_corn.gif")
+with st.expander("More info"): 
+    st.table(like_user.head(10))
+
 # Main page 🎈
 #🎬
