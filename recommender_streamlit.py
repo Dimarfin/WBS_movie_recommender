@@ -125,33 +125,40 @@ st.write("""
 """)
 movie_name = st.text_input('Movie title or a part of it', 'Star Wars')
 ids = find_movie_id(movie_name, movies)
-movies_with_ids = movies.loc[movies['movieId'].isin(ids)]
+if not ids.empty:
+    movies_with_ids = movies.loc[movies['movieId'].isin(ids)]
 
-title_1m = st.selectbox(
-    'Refine your search',
-    tuple(movies_with_ids['title'])
-    )
-id_1m = movies_with_ids.loc[movies_with_ids['title'] == title_1m]['movieId']
-
-top_similar_1m = movie_item_coll_filter(int(id_1m), ratings, movies ,n=10)
-top_similar_1m = top_similar_1m.merge(links[['movieId','imdbId']], how='left', on='movieId')
-
-temp=[]
-width = [3]*11
-temp[0:10] = st.columns(width)
-for i, row in top_similar_1m.head(10).iterrows():
-    with temp[i]:
-        real_imdbId = '00000000' + str(row['imdbId'])
-        real_imdbId = 'tt' + real_imdbId[-7:]
-        response = requests.get(f"""https://api.themoviedb.org/3/find/{real_imdbId}?api_key={API_key}&language=en-US&external_source=imdb_id""")
-        try:
-            st.image(('https://image.tmdb.org/t/p/w92' + response.json()['movie_results'][0]['poster_path']), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
-        except:
-            st.image(('rsz_movie_default.jpg'), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
-
-with st.expander("More info"):
-    st.table(top_similar_1m.reset_index(drop=True).head(10)[['title','PearsonR','genres']])
-
+    title_1m = st.selectbox(
+        'Refine your search',
+        tuple(movies_with_ids['title'])
+        )
+    id_1m = movies_with_ids.loc[movies_with_ids['title'] == title_1m]['movieId']
+    
+    top_similar_1m = movie_item_coll_filter(int(id_1m), ratings, movies ,n=10)
+    top_similar_1m = top_similar_1m.merge(links[['movieId','imdbId']], how='left', on='movieId')
+    
+    temp=[]
+    width = [3]*11
+    temp[0:10] = st.columns(width)
+    for i, row in top_similar_1m.head(10).iterrows():
+        with temp[i]:
+            real_imdbId = '00000000' + str(row['imdbId'])
+            real_imdbId = 'tt' + real_imdbId[-7:]
+            response = requests.get(f"""https://api.themoviedb.org/3/find/{real_imdbId}?api_key={API_key}&language=en-US&external_source=imdb_id""")
+            try:
+                st.image(('https://image.tmdb.org/t/p/w92' + response.json()['movie_results'][0]['poster_path']), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+            except:
+                st.image(('rsz_movie_default.jpg'), caption=row['title'], width=None, use_column_width='always', clamp=False, channels="RGB", output_format="auto")
+    
+    with st.expander("More info"):
+        st.table(top_similar_1m.reset_index(drop=True).head(10)[['title','PearsonR','genres']])
+else:
+    st.markdown("<b style='text-align: right; color: red;'>No movies found for the given keyword(s)</b>", unsafe_allow_html=True)
+    st.write('_')
+    st.write('_')
+    st.write('_')
+    
+    
 st.write("""
 ### User based collaborative filtering
 """)
